@@ -17,8 +17,8 @@ class TurtlebotDriving():
 
 	def __init__(self,pose):
 		self.pose=pose
-
-	
+		self.pub=rospy.Publisher('cmd_vel', Twist,queue_size=1)
+		rospy.on_shutdown(self.shutdown)
 	def odom_callback(self, msg):
 		# Get (x, y, theta) specification from odometry topic
 		quarternion = [msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,\
@@ -28,14 +28,15 @@ class TurtlebotDriving():
 		self.pose.theta = yaw 
 		self.pose.x = msg.pose.pose.position.x
 		self.pose.y = msg.pose.pose.position.y
-
+	def shutdown(self):
+		self.pub.publish(Twist())
 	def driver(self):
 		pub=rospy.Publisher('cmd_vel', Twist,queue_size=1)
 		s=rospy.Subscriber("odom",Odometry,self.odom_callback)
 		rospy.init_node('time', anonymous=True)
 		d=1
-		v=0.3
-		s=0.3
+		v=0.1
+		s=0.1
 		step=0
 		plotx=[]
 		ploty=[]
@@ -47,6 +48,7 @@ class TurtlebotDriving():
 		fwd.linear.x=v
 		rot.angular.z=s
 		count=0
+		pub.publish(default)
 		while count<5:
 	
 		     		

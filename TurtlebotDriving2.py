@@ -17,7 +17,10 @@ class TurtlebotDriving():
 	
 	def __init__(self,pose):
 		self.pose=pose
-
+		self.pub=rospy.Publisher('cmd_vel', Twist,queue_size=1)
+		rospy.init_node('time', anonymous=True)
+		self.r=rospy.Rate(10)
+		rospy.on_shutdown(self.shutdown)
 	
 	def odom_callback(self, msg):
 		# Get (x, y, theta) specification from odometry topic
@@ -28,14 +31,15 @@ class TurtlebotDriving():
 		self.pose.theta = yaw 
 		self.pose.x = msg.pose.pose.position.x
 		self.pose.y = msg.pose.pose.position.y
-
+	
+	def shutdown(self):
+		self.pub.publish(Twist())
+		
 	def driver(self):
-		pub=rospy.Publisher('cmd_vel', Twist,queue_size=1)
 		s=rospy.Subscriber("odom",Odometry,self.odom_callback)
-		rospy.init_node('time', anonymous=True)
 		d=1
-		v=0.1
-		s=0.3
+		v=0.075
+		s=0.1
 		step=0
 		plotx=[]
 		ploty=[]
@@ -53,43 +57,34 @@ class TurtlebotDriving():
 		distance_cumul=0
 		spin_cumul=0
 		count=0
-		'''rospy.Time.now() - t < rospy.Duration(500) and'''
-		pub.publish(default)
+		self.pub.publish(default)
 		while step<4:
 			x=self.pose.x
 			y=self.pose.y
 			while distance_cumul<d:
 				distance_cumul=distance_cumul+math.sqrt(pow(self.pose.x-x,2)+pow(self.pose.y-y,2))
-	
-		     		pub.publish(fwd)
-				r.sleep()
-				
+				self.pub.publish(fwd)
+				self.r.sleep()
 				plotx.append(self.pose.x)
 				ploty.append(self.pose.y)
 				if(count%3==0):
-			     		x=self.pose.x
+					x=self.pose.x
 					y=self.pose.y
 				count=count+1
-				"""print(distance_cumul,math.sqrt(pow(self.pose.x-x,2)+pow(self.pose.y-y,2)),self.pose.x)
-"""
 			distance_cumul=0
-			
-			
 			t_break=rospy.Time.now()
 			while(rospy.Time.now()-t_break<rospy.Duration(3)):
-				pub.publish(default)		
-				r.sleep()
+				self.pub.publish(default)
+				self.r.sleep()
 		
 
 			theta=self.pose.theta
 			spin_cumul=0
 			while spin_cumul<math.pi/2:
 				spin_cumul=spin_cumul+(self.pose.theta-theta)%math.pi
-				""""print ("angle spin:",spin_cumul,self.pose.theta,theta)
-"""				
 				theta=self.pose.theta
-				pub.publish(rot)
-				r.sleep()
+				self.pub.publish(rot)
+				self.r.sleep()
 					
 
 			
@@ -97,18 +92,17 @@ class TurtlebotDriving():
 			
 			t_break=rospy.Time.now()
 			while(rospy.Time.now()-t_break<rospy.Duration(3)):
-				pub.publish(default)
-				r.sleep()	
-				"""print("break ang")"""
+				self.pub.publish(default)
+				self.r.sleep()
 			plotx.append(self.pose.x)
 			ploty.append(self.pose.y)
 			step=step+1
 		plt.plot(plotx,ploty)
 		plt.show()
 if __name__ == '__main__':
-       try:
-	  t=TurtlebotDriving(Pose(0,0,0))			
-          t.driver()
+	try:
+		t=TurtlebotDriving(Pose(0,0,0))			
+		t.driver()
 	
-       except rospy.ROSInterruptException:
-          pass
+	except rospy.ROSInterruptException:
+		pass

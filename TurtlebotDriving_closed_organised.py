@@ -46,7 +46,7 @@ class TurtlebotDriving():
     def driver(self):
         
         # get pose info from method odom_callback to plot
-        u=rospy.Subscriber("odom",Odometry,self.odom_callback)
+        rospy.Subscriber("odom",Odometry,self.odom_callback)
         
         distance = 1
         linear_speed = 0.075

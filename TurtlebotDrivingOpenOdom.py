@@ -49,7 +49,7 @@ class TurtlebotDriving():
 		rot.angular.z=s
 		count=0
 		pub.publish(default)
-		while count<5:
+		while count<4:
 	
 		     		
 				t2=rospy.Time.now()
